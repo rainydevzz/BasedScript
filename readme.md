@@ -1,3 +1,3 @@
 # BasedScript
 
-A WIP Toy Lang written in Rust.
+A WIP Toy Language written in Rust.
