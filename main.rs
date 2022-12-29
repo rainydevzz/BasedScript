@@ -5,13 +5,13 @@ fn main() {
 
     let contents = fs::read_to_string(&fp[1]);
 
-    let mut stripped = strip(contents.unwrap());
+    let stripped = strip(contents.unwrap());
 
     let mut lexer = Lexer::new(stripped);
 
     let tokens = lexer.lex();
     let mut parser = Parser::new(tokens);
-    let parsed = parser.parse();
+    parser.parse();
 }
 
 fn strip(contents: String) -> String {
@@ -106,6 +106,17 @@ impl Lexer {
                     self.adv();
                 }
 
+                '"' => {
+                    let mut buf = String::new();
+                    self.adv();
+                    while self.cur_char() != '"' {
+                        buf.push(self.cur_char());
+                        self.adv();
+                    }
+                    tokens.push(Token::new(TokenKind::String, buf));
+                    self.adv();
+                }
+
                 '=' => {
                     tokens.push(Token::new(TokenKind::Equal, "=".to_owned()));
                     self.adv();
@@ -117,7 +128,6 @@ impl Lexer {
 
                 '/' => {
                     self.adv();
-                    let mut buf = String::new();
                     while self.cur_char() != '/' {
                         self.adv();
                     }
@@ -151,6 +161,7 @@ impl Lexer {
 }
 
 #[derive(Debug)]
+#[allow(dead_code)] // to be used later
 struct Variable {
     name: String,
     value: String
@@ -214,7 +225,7 @@ impl Parser {
 
                 TokenKind::Print => {
                     let tok_res = self.tokens.iter().find(|t| t.literal == cur_tok.literal && !matches!(t.kind, TokenKind::Print));
-                    if cur_tok.literal.starts_with("'") {
+                    if cur_tok.literal.starts_with("'") || cur_tok.literal.starts_with("\"") {
                         println!("{}", cur_tok.literal);
                         self.adv();
                     } else if !tok_res.is_none() {
@@ -223,10 +234,6 @@ impl Parser {
                     } else if tok_res.is_none() {
                         panic!("variable {} not found", cur_tok.literal);
                     }
-                }
-
-                _ => {
-                    self.adv();
                 }
             }
         }
