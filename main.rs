@@ -22,7 +22,6 @@ fn strip(contents: String) -> String {
 }
 
 #[derive(Debug)]
-#[derive(PartialEq)]
 enum TokenKind {
     String,
     Equal,
@@ -171,7 +170,6 @@ impl Lexer {
 }
 
 #[derive(Debug)]
-#[allow(dead_code)] // to be used later
 struct Variable {
     name: String,
     value: String
