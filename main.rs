@@ -17,10 +17,8 @@ fn main() {
 
 fn strip(contents: String) -> String {
     let mut cloned = contents.clone();
-    println!("{}", cloned);
     cloned = cloned.replace('\n', " ");
     cloned = cloned.replace('\r', "");
-    println!("{}", cloned);
     return cloned;
 }
 
@@ -30,7 +28,8 @@ enum TokenKind {
     String,
     Equal,
     Identifier,
-    Let
+    Let,
+    Print
 }
 
 #[derive(Debug)]
@@ -80,8 +79,20 @@ impl Lexer {
                     }
                     if buf == "let" {
                         tokens.push(Token::new(TokenKind::Let, buf));
+                    } else if buf == "print" {
+                        if self.cur_char() == '(' {
+                            buf = "".to_string();
+                            self.adv();
+                            while self.cur_char() != ')' {
+                                buf.push(self.cur_char());
+                                self.adv();
+                            }
+                            tokens.push(Token::new(TokenKind::Print, buf));
+                            self.adv();
+                        }
                     } else {
                         tokens.push(Token::new(TokenKind::Identifier, buf));
+                        self.adv();
                     }
                 }
 
@@ -103,6 +114,14 @@ impl Lexer {
 
                 ' ' => {
                     self.adv();
+                }
+
+                '/' => {
+                    self.adv();
+                    let mut buf = String::new();
+                    while self.cur_char() != '/' {
+                        self.adv();
+                    }
                 }
 
                 _ => {
@@ -194,13 +213,24 @@ impl Parser {
                     }
                 }
 
+                TokenKind::Print => {
+                    let tok_res = self.tokens.iter().find(|t| t.literal == cur_tok.literal && !matches!(t.kind, TokenKind::Print));
+                    if cur_tok.literal.starts_with("'") {
+                        println!("{}", cur_tok.literal);
+                        self.adv();
+                    } else if !tok_res.is_none() {
+                        println!("{}", tok_res.unwrap().literal);
+                        self.adv();
+                    } else if tok_res.is_none() {
+                        panic!("variable {} not found", cur_tok.literal);
+                    }
+                }
+
                 _ => {
                     self.adv();
                 }
             }
         }
-
-        println!("{:?}", self.stack);
     }
 
     fn adv(&mut self) {

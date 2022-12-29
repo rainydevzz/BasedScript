@@ -1,3 +1,8 @@
-let foo = 'bar'
+let foo = 'bar' / declares var in stack /
 
-let me = 'you'
+let me = 'you' / declares var in stack /
+
+print('aaa') / prints aaa /
+print(foo) / prints bar /
+
+/ comment weee /
