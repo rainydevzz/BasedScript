@@ -5,4 +5,6 @@ let me = 'you' / declares var in stack /
 print('aaa') / prints aaa /
 print(foo) / prints bar /
 
+print("aaa") / prints aaa /
+
 / comment weee /
