@@ -2,9 +2,12 @@ let foo = 'bar' / declares var in stack /
 
 let me = 'you' / declares var in stack /
 
+let num = 123 / numbers!!! omg /
+
 print('aaa') / prints aaa /
 print(foo) / prints bar /
-
 print("aaa") / prints aaa /
+print(num) / prints 123 /
+print(123) / prints 123 /
 
 / comment weee /

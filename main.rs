@@ -28,7 +28,8 @@ enum TokenKind {
     Equal,
     Identifier,
     Let,
-    Print
+    Print,
+    Number
 }
 
 #[derive(Debug)]
@@ -93,6 +94,15 @@ impl Lexer {
                         tokens.push(Token::new(TokenKind::Identifier, buf));
                         self.adv();
                     }
+                }
+
+                _ if self.cur_char().is_numeric() => {
+                    let mut buf = String::new();
+                    while self.cur_char().is_numeric() {
+                        buf.push(self.cur_char());
+                        self.adv();
+                    }
+                    tokens.push(Token::new(TokenKind::Number, buf));
                 }
 
                 '\'' => {
@@ -207,7 +217,7 @@ impl Parser {
                 }
 
                 TokenKind::Equal => {
-                    if matches!(self.tokens[self.counter - 1].kind, TokenKind::Identifier) && matches!(self.tokens[self.counter + 1].kind, TokenKind::String) {
+                    if matches!(self.tokens[self.counter - 1].kind, TokenKind::Identifier) && (matches!(self.tokens[self.counter + 1].kind, TokenKind::String) || matches!(self.tokens[self.counter + 1].kind, TokenKind::Number)) {
                         self.adv();
                     } else {
                         panic!("no identifier token found");
@@ -223,13 +233,25 @@ impl Parser {
                     }
                 }
 
+                TokenKind::Number => {
+                    if matches!(self.tokens[self.counter - 1].kind, TokenKind::Equal) {
+                        self.stack.push(Variable::new(self.tokens[self.counter - 2].literal.clone(), cur_tok.literal.clone()));
+                        self.adv();
+                    } else {
+                        panic!("literal with no assignment");
+                    }
+                }
+
                 TokenKind::Print => {
-                    let tok_res = self.tokens.iter().find(|t| t.literal == cur_tok.literal && !matches!(t.kind, TokenKind::Print));
-                    if cur_tok.literal.starts_with("'") || cur_tok.literal.starts_with("\"") {
+                    let tok_res = self.stack.iter().find(|v| v.name == cur_tok.literal);
+                    if !tok_res.is_none() {
+                        println!("{}", tok_res.unwrap().value);
+                        self.adv();
+                    } else if cur_tok.literal.starts_with("'") || cur_tok.literal.starts_with("\"") {
                         println!("{}", cur_tok.literal);
                         self.adv();
-                    } else if !tok_res.is_none() {
-                        println!("{}", tok_res.unwrap().literal);
+                    } else if cur_tok.literal.chars().collect::<Vec<char>>()[0].is_numeric() {
+                        println!("{}", cur_tok.literal);
                         self.adv();
                     } else if tok_res.is_none() {
                         panic!("variable {} not found", cur_tok.literal);
