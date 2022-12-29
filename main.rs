@@ -10,7 +10,6 @@ fn main() {
     let mut lexer = Lexer::new(stripped);
 
     let tokens = lexer.lex();
-    println!("{:?}", tokens);
     let mut parser = Parser::new(tokens);
     let parsed = parser.parse();
 }
@@ -122,6 +121,7 @@ impl Lexer {
                     while self.cur_char() != '/' {
                         self.adv();
                     }
+                    self.adv();
                 }
 
                 _ => {
@@ -129,7 +129,6 @@ impl Lexer {
                 }
             }
         }
-        self.adv();
         return tokens;
     }
 
