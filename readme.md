@@ -10,8 +10,8 @@ After that, run `./main ./examples/main.based` and watch the magic happen! Feel 
 
 #### Currently Working
 
-- variable declarations (strings only)
-- printing values (strings and variables only)
+- variable declarations (strings and numbers only)
+- printing values (strings, numbers, and variables only)
 
 #### Planned Features
 
