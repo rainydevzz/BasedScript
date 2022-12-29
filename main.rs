@@ -5,13 +5,27 @@ fn main() {
 
     let contents = fs::read_to_string(&fp[1]);
 
-    let mut lexer = Lexer::new(contents.unwrap());
+    let mut stripped = strip(contents.unwrap());
+
+    let mut lexer = Lexer::new(stripped);
 
     let tokens = lexer.lex();
     println!("{:?}", tokens);
+    let mut parser = Parser::new(tokens);
+    let parsed = parser.parse();
+}
+
+fn strip(contents: String) -> String {
+    let mut cloned = contents.clone();
+    println!("{}", cloned);
+    cloned = cloned.replace('\n', " ");
+    cloned = cloned.replace('\r', "");
+    println!("{}", cloned);
+    return cloned;
 }
 
 #[derive(Debug)]
+#[derive(PartialEq)]
 enum TokenKind {
     String,
     Equal,
@@ -34,6 +48,7 @@ impl Token {
     }
 }
 
+#[derive(Debug)]
 struct Lexer {
     contents: Vec<char>,
     counter: usize
@@ -52,7 +67,7 @@ impl Lexer {
 
         while self.contents.len() > self.counter {
 
-            if self.counter == self.contents.len() - 1 {
+            if self.counter == self.contents.len() - 1 || self.counter == self.contents.len() {
                 break;
             }
             
@@ -70,14 +85,15 @@ impl Lexer {
                     }
                 }
 
-                _ if self.cur_char() == '\'' => {
-                    self.adv();
+                '\'' => {
                     let mut buf = String::new();
+                    self.adv();
                     while self.cur_char() != '\'' {
                         buf.push(self.cur_char());
                         self.adv();
                     }
                     tokens.push(Token::new(TokenKind::String, buf));
+                    self.adv();
                 }
 
                 '=' => {
@@ -94,6 +110,7 @@ impl Lexer {
                 }
             }
         }
+        self.adv();
         return tokens;
     }
 
@@ -101,13 +118,89 @@ impl Lexer {
         let c = self.contents.get(self.counter);
         
         match c {
-            Some(value) => {
+            Some(_value) => {
                 *c.unwrap()
             }
             None => {
                 '!'
             }
         }
+    }
+
+    fn adv(&mut self) {
+        self.counter += 1;
+    }
+}
+
+#[derive(Debug)]
+struct Variable {
+    name: String,
+    value: String
+}
+
+impl Variable {
+    pub fn new(name: String, value: String) -> Self {
+        Self {name: name, value: value}
+    }
+}
+
+#[derive(Debug)]
+struct Parser {
+    tokens: Vec<Token>,
+    counter: usize,
+    stack: Vec<Variable>
+}
+
+impl Parser {
+    pub fn new(tokens: Vec<Token>) -> Self {
+        Self { tokens: tokens, counter: 0, stack: Vec::new() }
+    }
+
+    pub fn parse(&mut self) {
+        while self.counter < self.tokens.len() {
+            let cur_tok = &self.tokens[self.counter];
+
+            match cur_tok.kind {
+                TokenKind::Let => {
+                    if matches!(self.tokens[self.counter + 1].kind, TokenKind::Identifier) {
+                        self.adv();
+                    } else {
+                        panic!("expected identifier.");
+                    }
+                }
+
+                TokenKind::Identifier => {
+                    if matches!(self.tokens[self.counter - 1].kind, TokenKind::Let) && matches!(self.tokens[self.counter + 1].kind, TokenKind::Equal) {
+                        self.adv();
+                    } else {
+                        panic!("no 'let' token found");
+                    }
+                }
+
+                TokenKind::Equal => {
+                    if matches!(self.tokens[self.counter - 1].kind, TokenKind::Identifier) && matches!(self.tokens[self.counter + 1].kind, TokenKind::String) {
+                        self.adv();
+                    } else {
+                        panic!("no identifier token found");
+                    }
+                }
+
+                TokenKind::String => {
+                    if matches!(self.tokens[self.counter - 1].kind, TokenKind::Equal) {
+                        self.stack.push(Variable::new(self.tokens[self.counter - 2].literal.clone(), cur_tok.literal.clone()));
+                        self.adv();
+                    } else {
+                        panic!("literal with no assignment");
+                    }
+                }
+
+                _ => {
+                    self.adv();
+                }
+            }
+        }
+
+        println!("{:?}", self.stack);
     }
 
     fn adv(&mut self) {
