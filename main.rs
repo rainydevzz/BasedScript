@@ -364,15 +364,15 @@ impl Parser {
                 }
 
                 TokenKind::Dot => {
-                    self.adv();
+                    self.adv(); // TODO
                 }
 
                 TokenKind::Semi => {
-                    self.adv();
+                    self.adv(); // TODO
                 }
                 
                 _ => {
-                    self.adv();
+                    self.adv(); // TODO
                 }
             }
         }
