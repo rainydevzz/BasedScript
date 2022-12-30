@@ -17,5 +17,8 @@ free(foo) # frees foo from the var stack #
 let sum = 15 + 1 # 16 #
 print(sum) # prints 16 #
 print(15 + 1) # prints 16 #
+print(5 + 4 + 3 + 2 + 1) # prints 16 #
+
+# still implementing multi-addend addtion for vars #
 
 # comment weee #
