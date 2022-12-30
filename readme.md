@@ -12,6 +12,7 @@ After that, run `./main ./examples/main.based` and watch the magic happen! Feel 
 
 - variable declarations (strings and numbers only)
 - printing values (strings, numbers, and variables only)
+- freeing variables from the stack with the free(var) function
 - addition (set values to expressions (2 addends only) and print expressions (unlimited addends))
 - valueless var declarations (defaults to 'undefined')
 - simple syntax errors through Rust's panic! macro
