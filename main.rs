@@ -30,7 +30,8 @@ enum TokenKind {
     Print,
     Number,
     Free,
-    Plus
+    Plus,
+    Dot
 }
 
 #[derive(Debug)]
@@ -165,6 +166,11 @@ impl Lexer {
                     self.adv();
                 }
 
+                '.' => {
+                    tokens.push(Token::new(TokenKind::Dot, ".".to_owned()));
+                    self.adv();
+                }
+
                 _ => {
                     self.adv();
                 }
@@ -269,7 +275,7 @@ impl Parser {
                             self.stack.push(Variable::new(self.tokens[self.counter - 2].literal.to_string(), eval.to_string()));
                             self.adv();
                         } else {
-                            panic!("Expected '=' but got '{}'", self.tokens[self.counter - 1].literal);
+                            self.adv();
                         }
                     } else if matches!(self.tokens[self.counter - 1].kind, TokenKind::Plus) && matches!(self.tokens[self.counter - 2].kind, TokenKind::Number) {
                         self.adv();
@@ -294,8 +300,12 @@ impl Parser {
                         if cur_tok.literal.contains("+") {
                             let rep_str = cur_tok.literal.replace(" ", "");
                             let int_vec = rep_str.split("+").collect::<Vec<&str>>();
-                            let eval = int_vec[0].parse::<i32>().unwrap() + int_vec[1].parse::<i32>().unwrap();
-                            println!("{}", eval);
+                            let mut sum = 0;
+                            for i in int_vec.iter() {
+                                let num = i.parse::<i32>().unwrap();
+                                sum += num;
+                            }
+                            println!("{}", sum);
                             self.adv();
                         } else {
                             println!("{}", cur_tok.literal);
@@ -322,6 +332,10 @@ impl Parser {
                     } else {
                         self.adv();
                     }
+                }
+
+                TokenKind::Dot => {
+                    self.adv();
                 }
             }
         }
