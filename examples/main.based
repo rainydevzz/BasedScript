@@ -1,21 +1,21 @@
-let foo = 'bar' / declares var in stack /
+let foo = 'bar' # declares var in stack #
 
-let me = 'you' / declares var in stack /
+let me = 'you' # declares var in stack #
 
-let num = 123 / numbers!!! omg /
+let num = 123 # numbers!!! omg #
 
-print('aaa') / prints aaa /
-print(foo) / prints bar /
-print("aaa") / prints aaa /
-print(num) / prints 123 /
-print(123) / prints 123 /
+print('aaa') # prints aaa #
+print(foo) # prints bar #
+print("aaa") # prints aaa #
+print(num) # prints 123 #
+print(123) # prints 123 #
 
-free(foo) / frees foo from the var stack /
+free(foo) # frees foo from the var stack #
 
-/ addition! /
+# addition! #
 
-let sum = 15 + 1 / 16 /
-print(sum) / prints 16 /
-print(15 + 1) / prints 16 /
+let sum = 15 + 1 # 16 #
+print(sum) # prints 16 #
+print(15 + 1) # prints 16 #
 
-/ comment weee /
+# comment weee #

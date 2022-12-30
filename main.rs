@@ -157,9 +157,9 @@ impl Lexer {
                     self.adv();
                 }
 
-                '/' => {
+                '#' => {
                     self.adv();
-                    while self.cur_char() != '/' {
+                    while self.cur_char() != '#' {
                         self.adv();
                     }
                     self.adv();
