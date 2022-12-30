@@ -9,7 +9,8 @@ fn main() {
 
     let mut lexer = Lexer::new(stripped);
 
-    let tokens = lexer.lex();
+    let mut tokens = lexer.lex();
+    println!("{:?}", tokens);
     let mut parser = Parser::new(tokens);
     parser.parse();
 }
@@ -295,21 +296,15 @@ impl Parser {
                 }
 
                 TokenKind::Number => {
-                    if matches!(self.tokens[self.counter - 1].kind, TokenKind::Equal) && !matches!(self.tokens[self.counter + 1].kind, TokenKind::Plus) {
+                    let k = &self.tokens[self.counter + 1].kind;
+                    if !matches!(k, TokenKind::Plus) &&
+                    !matches!(k, TokenKind::Minus) &&
+                    !matches!(k, TokenKind::Multi) &&
+                    !matches!(k, TokenKind::Divide) {
                         self.stack.push(Variable::new(self.tokens[self.counter - 2].literal.to_string(), cur_tok.literal.to_string()));
                         self.adv();
-                    } else if matches!(self.tokens[self.counter + 1].kind, TokenKind::Plus) && matches!(self.tokens[self.counter + 2].kind, TokenKind::Number) {
-                        if matches!(self.tokens[self.counter - 1].kind, TokenKind::Equal) {
-                            let eval = cur_tok.literal.parse::<i32>().unwrap() + self.tokens[self.counter + 2].literal.parse::<i32>().unwrap();
-                            self.stack.push(Variable::new(self.tokens[self.counter - 2].literal.to_string(), eval.to_string()));
-                            self.adv();
-                        } else {
-                            self.adv();
-                        }
-                    } else if matches!(self.tokens[self.counter - 1].kind, TokenKind::Plus) && matches!(self.tokens[self.counter - 2].kind, TokenKind::Number) {
-                        self.adv();
                     } else {
-                        panic!("arithmetic error");
+                        self.exp_eval();
                     }
                 }
 
@@ -336,9 +331,14 @@ impl Parser {
                             }
                             println!("{}", sum);
                             self.adv();
-                        } else {
-                            println!("{}", cur_tok.literal);
-                            self.adv();
+                        } else if cur_tok.literal.contains("-") {
+                            let rep_str = cur_tok.literal.replace(" ", "");
+                            let int_vec = rep_str.split("-").collect::<Vec<&str>>();
+                            let mut sum = 0;
+                            for i in int_vec.iter() {
+                                let num = i.parse::<i32>().unwrap();
+                                sum -= num;
+                            }
                         }
                     } else if tok_res.is_none() {
                         panic!("variable {} not found", cur_tok.literal);
@@ -368,11 +368,47 @@ impl Parser {
                 }
 
                 TokenKind::Semi => {
-                    self.adv(); // TODO
+                    self.adv();
                 }
                 
                 _ => {
-                    self.adv(); // TODO
+                    self.adv();
+                }
+            }
+        }
+    }
+
+    fn exp_eval(&mut self) {
+        let cur_tok = &self.tokens[self.counter];
+        let mut dif = 2;
+        let mut eval: i32 = 0;
+        while self.counter < self.tokens.len() {
+            match cur_tok.kind {
+                TokenKind::Number => {
+                    if matches!(self.tokens[self.counter + 1].kind, TokenKind::Plus) {
+                        eval += cur_tok.literal.to_string().parse::<i32>().unwrap() + self.tokens[self.counter + 2].literal.to_string().parse::<i32>().unwrap();
+                        self.counter += 1;
+                        dif += 1;
+                    } else if matches!(self.tokens[self.counter + 1].kind, TokenKind::Minus) {
+                        eval += cur_tok.literal.to_string().parse::<i32>().unwrap() - self.tokens[self.counter + 2].literal.to_string().parse::<i32>().unwrap();
+                        self.counter += 1;
+                        dif += 1;
+                    } else if matches!(self.tokens[self.counter + 1].kind, TokenKind::Minus) {
+                        eval += cur_tok.literal.to_string().parse::<i32>().unwrap() * self.tokens[self.counter + 2].literal.to_string().parse::<i32>().unwrap();
+                        self.counter += 1;
+                        dif += 1;
+                    } else if matches!(self.tokens[self.counter + 1].kind, TokenKind::Divide) {
+                        eval += cur_tok.literal.to_string().parse::<i32>().unwrap() / self.tokens[self.counter + 2].literal.to_string().parse::<i32>().unwrap();
+                        self.counter += 1;
+                        dif += 1;
+                    } else {
+                        self.stack.push(Variable::new(self.tokens[self.counter - dif].literal.to_string(), eval.to_string()));
+                        self.counter += 1;
+                    }
+                }
+
+                _ => {
+                    self.counter += 1;
                 }
             }
         }
