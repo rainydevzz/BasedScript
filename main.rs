@@ -15,7 +15,7 @@ fn main() {
 }
 
 fn strip(contents: String) -> String {
-    let mut cloned = contents.clone();
+    let mut cloned = contents.to_string();
     cloned = cloned.replace('\n', " ");
     cloned = cloned.replace('\r', "");
     return cloned;
@@ -28,7 +28,9 @@ enum TokenKind {
     Identifier,
     Let,
     Print,
-    Number
+    Number,
+    Free,
+    Plus
 }
 
 #[derive(Debug)]
@@ -88,6 +90,21 @@ impl Lexer {
                             }
                             tokens.push(Token::new(TokenKind::Print, buf));
                             self.adv();
+                        } else {
+                            panic!("Print token found, but no (");
+                        }
+                    } else if buf == "free" {
+                        if self.cur_char() == '(' {
+                            buf = "".to_string();
+                            self.adv();
+                            while self.cur_char() != ')' {
+                                buf.push(self.cur_char());
+                                self.adv();
+                            }
+                            tokens.push(Token::new(TokenKind::Free, buf));
+                            self.adv();
+                        } else {
+                            panic!("Free token found, but no (");
                         }
                     } else {
                         tokens.push(Token::new(TokenKind::Identifier, buf));
@@ -128,6 +145,11 @@ impl Lexer {
 
                 '=' => {
                     tokens.push(Token::new(TokenKind::Equal, "=".to_owned()));
+                    self.adv();
+                }
+
+                '+' => {
+                    tokens.push(Token::new(TokenKind::Plus, "+".to_owned()));
                     self.adv();
                 }
 
@@ -209,8 +231,14 @@ impl Parser {
                 TokenKind::Identifier => {
                     if matches!(self.tokens[self.counter - 1].kind, TokenKind::Let) && matches!(self.tokens[self.counter + 1].kind, TokenKind::Equal) {
                         self.adv();
-                    } else {
-                        panic!("no 'let' token found");
+                    } else if matches!(self.tokens[self.counter + 1].kind, TokenKind::Equal) {
+                        let tok_res = self.stack.iter().position(|t| t.name == cur_tok.literal);
+                        if !tok_res.is_none() {
+                            self.stack[tok_res.unwrap()] = Variable::new(cur_tok.literal.to_string(), self.tokens[self.counter + 2].literal.to_string());
+                            self.adv();
+                        } else if tok_res.is_none() {
+                            panic!("variable {} not found, must declare variable with 'let' before reassigning", cur_tok.literal);
+                        }
                     }
                 }
 
@@ -224,7 +252,7 @@ impl Parser {
 
                 TokenKind::String => {
                     if matches!(self.tokens[self.counter - 1].kind, TokenKind::Equal) {
-                        self.stack.push(Variable::new(self.tokens[self.counter - 2].literal.clone(), cur_tok.literal.clone()));
+                        self.stack.push(Variable::new(self.tokens[self.counter - 2].literal.to_string(), cur_tok.literal.to_string()));
                         self.adv();
                     } else {
                         panic!("literal with no assignment");
@@ -232,27 +260,67 @@ impl Parser {
                 }
 
                 TokenKind::Number => {
-                    if matches!(self.tokens[self.counter - 1].kind, TokenKind::Equal) {
-                        self.stack.push(Variable::new(self.tokens[self.counter - 2].literal.clone(), cur_tok.literal.clone()));
+                    if matches!(self.tokens[self.counter - 1].kind, TokenKind::Equal) && !matches!(self.tokens[self.counter + 1].kind, TokenKind::Plus) {
+                        self.stack.push(Variable::new(self.tokens[self.counter - 2].literal.to_string(), cur_tok.literal.to_string()));
+                        self.adv();
+                    } else if matches!(self.tokens[self.counter + 1].kind, TokenKind::Plus) && matches!(self.tokens[self.counter + 2].kind, TokenKind::Number) {
+                        if matches!(self.tokens[self.counter - 1].kind, TokenKind::Equal) {
+                            let eval = cur_tok.literal.parse::<i32>().unwrap() + self.tokens[self.counter + 2].literal.parse::<i32>().unwrap();
+                            self.stack.push(Variable::new(self.tokens[self.counter - 2].literal.to_string(), eval.to_string()));
+                            self.adv();
+                        } else {
+                            panic!("Expected '=' but got '{}'", self.tokens[self.counter - 1].literal);
+                        }
+                    } else if matches!(self.tokens[self.counter - 1].kind, TokenKind::Plus) && matches!(self.tokens[self.counter - 2].kind, TokenKind::Number) {
                         self.adv();
                     } else {
-                        panic!("literal with no assignment");
+                        panic!("arithmetic error");
                     }
                 }
 
                 TokenKind::Print => {
                     let tok_res = self.stack.iter().find(|v| v.name == cur_tok.literal);
                     if !tok_res.is_none() {
-                        println!("{}", tok_res.unwrap().value);
-                        self.adv();
+                        if tok_res.unwrap().value != "" {
+                            println!("{}", tok_res.unwrap().value);
+                            self.adv();
+                        } else {
+                            panic!("cannot print an empty value");
+                        }
                     } else if cur_tok.literal.starts_with("'") || cur_tok.literal.starts_with("\"") {
                         println!("{}", cur_tok.literal);
                         self.adv();
                     } else if cur_tok.literal.chars().collect::<Vec<char>>()[0].is_numeric() {
-                        println!("{}", cur_tok.literal);
-                        self.adv();
+                        if cur_tok.literal.contains("+") {
+                            let rep_str = cur_tok.literal.replace(" ", "");
+                            let int_vec = rep_str.split("+").collect::<Vec<&str>>();
+                            let eval = int_vec[0].parse::<i32>().unwrap() + int_vec[1].parse::<i32>().unwrap();
+                            println!("{}", eval);
+                            self.adv();
+                        } else {
+                            println!("{}", cur_tok.literal);
+                            self.adv();
+                        }
                     } else if tok_res.is_none() {
                         panic!("variable {} not found", cur_tok.literal);
+                    }
+                }
+
+                TokenKind::Free => {
+                    let tok_res = self.stack.iter().position(|v| v.name == cur_tok.literal);
+                    if !tok_res.is_none() {
+                        self.stack.remove(tok_res.unwrap());
+                        self.adv();
+                    } else {
+                        panic!("variable {} not found", cur_tok.literal);
+                    }
+                }
+
+                TokenKind::Plus => {
+                    if !matches!(self.tokens[self.counter - 1].kind, TokenKind::Number) || !matches!(self.tokens[self.counter + 1].kind, TokenKind::Number) {
+                        panic!("expected Number");
+                    } else {
+                        self.adv();
                     }
                 }
             }

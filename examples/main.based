@@ -10,4 +10,10 @@ print("aaa") / prints aaa /
 print(num) / prints 123 /
 print(123) / prints 123 /
 
+/ addition! /
+
+let sum = 15 + 1 / 16 /
+print(sum) / prints 16 /
+print(15 + 1) / prints 16 /
+
 / comment weee /

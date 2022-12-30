@@ -12,9 +12,10 @@ After that, run `./main ./examples/main.based` and watch the magic happen! Feel 
 
 - variable declarations (strings and numbers only)
 - printing values (strings, numbers, and variables only)
+- addition (set values to expressions (2 addends only) and print expressions (2 addends only))
 
 #### Planned Features
 
 - more data types
 - more functions
-- basic arithmetic
+- basic arithmetic (began implementing)
