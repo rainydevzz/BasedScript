@@ -20,3 +20,5 @@ After that, run `./main ./examples/main.based` and watch the magic happen! Feel 
 - more data types
 - more functions
 - basic arithmetic (began implementing)
+
+**If you like what you see, consider starring the repo and following me <3**
