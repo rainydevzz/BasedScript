@@ -35,7 +35,8 @@ enum TokenKind {
     Multi,
     Divide,
     Dot,
-    Semi
+    Semi,
+    Expression
 }
 
 #[derive(Debug)]
@@ -369,7 +370,10 @@ impl Parser {
                 TokenKind::Semi => {
                     self.adv();
                 }
-                TokenKind::Minus | TokenKind::Multi | TokenKind::Divide => todo!()
+                
+                _ => {
+                    self.adv();
+                }
             }
         }
     }
