@@ -31,6 +31,9 @@ enum TokenKind {
     Number,
     Free,
     Plus,
+    Minus,
+    Multi,
+    Divide,
     Dot,
     Semi
 }
@@ -151,6 +154,21 @@ impl Lexer {
 
                 '+' => {
                     tokens.push(Token::new(TokenKind::Plus, "+".to_owned()));
+                    self.adv();
+                }
+
+                '-' => {
+                    tokens.push(Token::new(TokenKind::Minus, "-".to_owned()));
+                    self.adv();
+                }
+
+                '*' => {
+                    tokens.push(Token::new(TokenKind::Multi, "*".to_owned()));
+                    self.adv();
+                }
+
+                '/' => {
+                    tokens.push(Token::new(TokenKind::Divide, "/".to_owned()));
                     self.adv();
                 }
 
@@ -351,6 +369,7 @@ impl Parser {
                 TokenKind::Semi => {
                     self.adv();
                 }
+                TokenKind::Minus | TokenKind::Multi | TokenKind::Divide => todo!()
             }
         }
     }
