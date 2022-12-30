@@ -31,7 +31,8 @@ enum TokenKind {
     Number,
     Free,
     Plus,
-    Dot
+    Dot,
+    Semi
 }
 
 #[derive(Debug)]
@@ -109,7 +110,6 @@ impl Lexer {
                         }
                     } else {
                         tokens.push(Token::new(TokenKind::Identifier, buf));
-                        self.adv();
                     }
                 }
 
@@ -168,6 +168,11 @@ impl Lexer {
 
                 '.' => {
                     tokens.push(Token::new(TokenKind::Dot, ".".to_owned()));
+                    self.adv();
+                }
+
+                ';' => {
+                    tokens.push(Token::new(TokenKind::Semi, ";".to_owned()));
                     self.adv();
                 }
 
@@ -245,6 +250,11 @@ impl Parser {
                         } else if tok_res.is_none() {
                             panic!("variable {} not found, must declare variable with 'let' before reassigning", cur_tok.literal);
                         }
+                    } else if matches!(self.tokens[self.counter + 1].kind, TokenKind::Semi) && matches!(self.tokens[self.counter - 1].kind, TokenKind::Let) {
+                        self.stack.push(Variable::new(cur_tok.literal.to_string(), "undefined".to_string()));
+                        self.adv();
+                    } else {
+                        panic!("variable {} not found, must declare variable with 'let' before reassigning", cur_tok.literal);
                     }
                 }
 
@@ -335,6 +345,10 @@ impl Parser {
                 }
 
                 TokenKind::Dot => {
+                    self.adv();
+                }
+
+                TokenKind::Semi => {
                     self.adv();
                 }
             }

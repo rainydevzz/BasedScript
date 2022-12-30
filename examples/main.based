@@ -21,4 +21,7 @@ print(5 + 4 + 3 + 2 + 1) # prints 16 #
 
 # still implementing multi-addend addtion for vars #
 
+let unknown; # equal to undefined until reassigned, use semicolon here to tell the interpreter not to look for a value #
+print(unknown) # prints undefined #
+
 # comment weee #
