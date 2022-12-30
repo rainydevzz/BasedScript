@@ -10,6 +10,8 @@ print("aaa") / prints aaa /
 print(num) / prints 123 /
 print(123) / prints 123 /
 
+free(foo) / frees foo from the var stack /
+
 / addition! /
 
 let sum = 15 + 1 / 16 /
